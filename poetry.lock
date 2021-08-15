@@ -124,6 +124,18 @@ async = ["asgiref (>=3.2)"]
 dotenv = ["python-dotenv"]
 
 [[package]]
+name = "fugashi"
+version = "1.1.1"
+description = "A Cython MeCab wrapper for fast, pythonic Japanese tokenization."
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.extras]
+unidic = ["unidic"]
+unidic-lite = ["unidic-lite"]
+
+[[package]]
 name = "gitdb"
 version = "4.0.7"
 description = "Git Object Database"
@@ -200,6 +212,14 @@ description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
 optional = false
 python-versions = ">=3.5"
+
+[[package]]
+name = "ipadic"
+version = "1.0.0"
+description = "IPAdic packaged for Python"
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "itsdangerous"
@@ -494,6 +514,18 @@ python-versions = ">=3.7"
 numpy = ">=1.16.5"
 
 [[package]]
+name = "seqeval"
+version = "1.2.2"
+description = "Testing framework for sequence labeling"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = ">=1.14.0"
+scikit-learn = ">=0.21.3"
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -716,7 +748,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "e70aa9aa45531421df77d5d69ae1054850fb2febb64ad89e9e3f6e6c8e7d5325"
+content-hash = "6c422b0f453a57869891e66a0b9883928c864fa20f31622e26c61a80a707b67d"
 
 [metadata.files]
 alembic = [
@@ -761,6 +793,24 @@ filelock = [
 flask = [
     {file = "Flask-2.0.1-py3-none-any.whl", hash = "sha256:a6209ca15eb63fc9385f38e452704113d679511d9574d09b2cf9183ae7d20dc9"},
     {file = "Flask-2.0.1.tar.gz", hash = "sha256:1c4c257b1892aec1398784c63791cbaa43062f1f7aeb555c4da961b20ee68f55"},
+]
+fugashi = [
+    {file = "fugashi-1.1.1-cp35-cp35m-macosx_10_14_x86_64.whl", hash = "sha256:f4cb760951757ee8ceb144208eb35ca86181f4693fd03bd73ff34e5bf2df8698"},
+    {file = "fugashi-1.1.1-cp35-cp35m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:ab4b0496d0e856535296dcae36fe35c791b471c3da530e4dcbd7b5070c4fcd8a"},
+    {file = "fugashi-1.1.1-cp35-cp35m-win_amd64.whl", hash = "sha256:07a0185741a1558b9802801de2f9b34390c3f138074a6849aa601755f60d2604"},
+    {file = "fugashi-1.1.1-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:9fb934f6c3f849b661f7b4b57903259017436bea9202be9d63198cbfe37df199"},
+    {file = "fugashi-1.1.1-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:9b1806a3cd344d260999954c45a1ddb5e84cef57ac49315fb861c254ed759ebc"},
+    {file = "fugashi-1.1.1-cp36-cp36m-win_amd64.whl", hash = "sha256:51920491fd89f30356d43093439e3cc6283f18f509e50014db5f0a71da8abbe3"},
+    {file = "fugashi-1.1.1-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:f094b3655c374897717e3bc9a9a5f13d1f499e8bfde8d4460c4ae6b8810cb0c2"},
+    {file = "fugashi-1.1.1-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:6f6995b4897c8f8d6ea118732c3c62a8befeed20181a8d7b1a96ee2b65c7a434"},
+    {file = "fugashi-1.1.1-cp37-cp37m-win_amd64.whl", hash = "sha256:53280ea0f65e7c9f8f91844eeaaf5202858997bc44cd55903a8089eeca15ae63"},
+    {file = "fugashi-1.1.1-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:99f384ec47e8c7d9d1499f5dc6bc0bc52d7281fcc2345f3a4c62937c1bcb5ba5"},
+    {file = "fugashi-1.1.1-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:98ff499188e398f149c449800ec7038ef4cf93cb4ae8cdf3f52356b8c7607864"},
+    {file = "fugashi-1.1.1-cp38-cp38-win_amd64.whl", hash = "sha256:cf7a28f311f963eb666824764388f4bc434e1ac230a55d2cd4f998ec0712f3f8"},
+    {file = "fugashi-1.1.1-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:de07719e0841036c64abdd7bd942736918666e67f254de66f958e3457756e23a"},
+    {file = "fugashi-1.1.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:e1314520a1f92b79d0616c64a86839ba594fcd489b1fc9c7cc456acb508ae1fc"},
+    {file = "fugashi-1.1.1-cp39-cp39-win_amd64.whl", hash = "sha256:f462d39f937993d6964d8cd0979ac96a79cae621d53cd65f4e2b31b73392b704"},
+    {file = "fugashi-1.1.1.tar.gz", hash = "sha256:c57125af6f93bffc5c25803bbc476cb41527bfe8841a2a15019e7f12cc181d30"},
 ]
 gitdb = [
     {file = "gitdb-4.0.7-py3-none-any.whl", hash = "sha256:6c4cc71933456991da20917998acbe6cf4fb41eeaab7d6d67fbc05ecd4c865b0"},
@@ -833,6 +883,9 @@ huggingface-hub = [
 idna = [
     {file = "idna-3.2-py3-none-any.whl", hash = "sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a"},
     {file = "idna-3.2.tar.gz", hash = "sha256:467fbad99067910785144ce333826c71fb0e63a425657295239737f7ecd125f3"},
+]
+ipadic = [
+    {file = "ipadic-1.0.0.tar.gz", hash = "sha256:f5923d31eca6131acaaf18ed28d8998665b1347b640d3a6476f64650e9a71c07"},
 ]
 itsdangerous = [
     {file = "itsdangerous-2.0.1-py3-none-any.whl", hash = "sha256:5174094b9637652bdb841a3029700391451bd092ba3db90600dea710ba28e97c"},
@@ -1147,6 +1200,9 @@ scipy = [
     {file = "scipy-1.6.1-cp39-cp39-win32.whl", hash = "sha256:8e403a337749ed40af60e537cc4d4c03febddcc56cd26e774c9b1b600a70d3e4"},
     {file = "scipy-1.6.1-cp39-cp39-win_amd64.whl", hash = "sha256:a5193a098ae9f29af283dcf0041f762601faf2e595c0db1da929875b7570353f"},
     {file = "scipy-1.6.1.tar.gz", hash = "sha256:c4fceb864890b6168e79b0e714c585dbe2fd4222768ee90bc1aa0f8218691b11"},
+]
+seqeval = [
+    {file = "seqeval-1.2.2.tar.gz", hash = "sha256:f28e97c3ab96d6fcd32b648f6438ff2e09cfba87f05939da9b3970713ec56e6f"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},

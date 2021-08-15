@@ -132,3 +132,4 @@ dataset/
 mlruns/
 2020jp_tokenize_mecab_ipadic_bpe_tohoku_bert/
 apex/
+model/

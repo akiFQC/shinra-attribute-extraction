@@ -1,6 +1,6 @@
 python train.py \
-    --input_path /path/to/Target_Category \
-    --model_path /path/to/model_directory \
+    --input_path /home/afukuchi/Codes/shinra-attribute-extraction/2020jp_tokenize_mecab_ipadic_bpe_tohoku_bert/JP-5/data1/ujiie/shinra/tohoku_bert/JP-5/City \
+    --model_path models/City \
     --lr 1e-5 \
     --bsz 32 \
     --epoch 50 \
