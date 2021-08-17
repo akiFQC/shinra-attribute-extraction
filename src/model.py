@@ -83,6 +83,7 @@ class BertForMultilabelNER(nn.Module):
             loss = 0
 
             for label, logit in zip(labels, logits):
+                assert logit.view(-1, 3).shape[0] == label.view(-1).shape[0], f'shapes {logit.view(-1, 3).shape} {label.view(-1).shape } {sequence_output.shape}'
                 loss += loss_fct(logit.view(-1, 3), label.view(-1)) / len(labels)
 
         output = (logits, ) + outputs[2:]
