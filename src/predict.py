@@ -15,7 +15,7 @@ from model import BertForMultilabelNER, create_pooler_matrix
 
 import os
 
-device = "cuda:1" if torch.cuda.is_available() else "cpu"
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
 def ner_for_shinradata(model, tokenizer, shinra_dataset, device):
@@ -30,10 +30,11 @@ def ner_for_shinradata(model, tokenizer, shinra_dataset, device):
 
 def predict(model, dataset, device, sent_wise=False):
     model.eval()
-    dataloader = DataLoader(dataset, batch_size=8, collate_fn=ner_collate_fn)
+    dataloader = DataLoader(dataset, batch_size=128, collate_fn=ner_collate_fn)
 
     total_preds = []
     total_trues = []
+    print('total iteration = ', len(dataloader))
     with torch.no_grad():
         for step, inputs in enumerate(dataloader):
             input_ids = inputs["tokens"]
@@ -99,6 +100,7 @@ if __name__ == "__main__":
     # dataset = [d for idx, d in enumerate(dataset) if idx < 20 and d.nes is not None]
 
     # dataset = [ner_for_shinradata(model, tokenizer, d, device) for d in dataset]
+    print('length of dataset', len(dataset))
     with open(args.output_path, "w") as f:
         for data in dataset:
             if data.nes is None:
