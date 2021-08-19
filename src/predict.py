@@ -34,7 +34,7 @@ def predict(model, dataset, device, sent_wise=False):
 
     total_preds = []
     total_trues = []
-    print('total iteration = ', len(dataloader))
+    #print('total iteration = ', len(dataloader))
     with torch.no_grad():
         for step, inputs in enumerate(dataloader):
             input_ids = inputs["tokens"]
@@ -56,7 +56,7 @@ def predict(model, dataset, device, sent_wise=False):
             total_preds.append(preds)
             # test dataの場合truesは使わないので適当にpredsを入れる
             total_trues.append(labels if labels[0] is not None else preds)
-
+        #print('step', step)
     attr_num = len(total_preds[0])
     total_preds = [[pred for preds in total_preds for pred in preds[attr]] for attr in range(attr_num)]
     total_trues = [[true for trues in total_trues for true in trues[attr]] for attr in range(attr_num)]
@@ -100,10 +100,13 @@ if __name__ == "__main__":
     # dataset = [d for idx, d in enumerate(dataset) if idx < 20 and d.nes is not None]
 
     # dataset = [ner_for_shinradata(model, tokenizer, d, device) for d in dataset]
-    print('length of dataset', len(dataset))
+    print('output', args.output_path)
+    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
     with open(args.output_path, "w") as f:
-        for data in dataset:
+        for ii, data in enumerate(dataset):
+            #print('gen dataset ', ii, ', data.nes=', data.nes, ',', data.nes is None)
             if data.nes is None:
                 processed_data = ner_for_shinradata(model, tokenizer, data, device)
+                #print([json.dumps(ne, ensure_ascii=False) for ne in processed_data.nes])
                 f.write("\n".join([json.dumps(ne, ensure_ascii=False) for ne in processed_data.nes]))
                 f.write("\n")
