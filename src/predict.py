@@ -2,6 +2,8 @@ import argparse
 import sys
 from pathlib import Path
 import json
+import copy
+from typing import Optional
 
 import torch
 from torch.utils.data import DataLoader
@@ -68,12 +70,21 @@ def predict(model, dataset, device, sent_wise=False):
     return total_preds, total_trues
 
 
+#wikipediaのデータ取得
+def get_wiki(path,page_id,extension = "txt"):
+    try:
+        with open("{}/{}.{}".format(path,page_id,extension), "r", encoding = "utf_8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return None
+
 def parse_arg():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--input_path", type=str, help="Specify input path in SHINRA2020")
     parser.add_argument("--model_path", type=str, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--output_path", type=str, help="Specify attribute_list path in SHINRA2020")
+    parser.add_argument('--plane_path', type=str, default = "", help='Specify path of plane text in SHINRA2020 (plane text)')
 
     args = parser.parse_args()
 
@@ -87,6 +98,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
 
     input_path = Path(args.input_path)
+    print('input_path', input_path / "attributes.txt")
     assert (input_path / "attributes.txt").exists()
     with open(input_path / "attributes.txt", "r") as f:
         attributes = [attr for attr in f.read().split("\n") if attr != '']
@@ -108,5 +120,33 @@ if __name__ == "__main__":
             if data.nes is None:
                 processed_data = ner_for_shinradata(model, tokenizer, data, device)
                 #print([json.dumps(ne, ensure_ascii=False) for ne in processed_data.nes])
-                f.write("\n".join([json.dumps(ne, ensure_ascii=False) for ne in processed_data.nes]))
+                processed_data_nes_postprocessed = []
+                for ne in processed_data.nes:
+                    if 'text_offset' in ne:
+                        #print('ne', type(ne), ne, ne.keys())
+                        dic = copy.deepcopy(ne)
+                        id_text = ne["page_id"] 
+                        if args.plane_path =="":
+                            dic['text_offset']['text'] = "".join([ t.lstrip('#')  for t in  ne['token_offset']['text'].split(' ') ])
+                        else:
+                            offset_type = 'text_offset'
+                            plane_text = get_wiki(args.plane_path, id_text)
+                            #print('got text: ', plane_text[:20].replace("\n", ''))
+                            splitext = plane_text.split("\n")
+                            accum = ""
+                            for idx,line_id in enumerate(range(ne[offset_type]["start"]["line_id"],ne[offset_type]["end"]["line_id"]+1)):
+                                sol,eol = 0,len(splitext[line_id])
+                                if idx == 0:
+                                    sol = ne[offset_type]["start"]["offset"]
+                                else:
+                                    accum += "\n"
+                                if idx == ne[offset_type]["end"]["line_id"] - ne[offset_type]["start"]["line_id"]:
+                                    eol = ne[offset_type]["end"]["offset"]
+                                accum += splitext[line_id][sol:eol]
+                            dic['text_offset']['text']  = accum      
+                        #print(dic['title'], ': predicted', dic['text_offset']['text'], ':', dic['token_offset']['text'])
+                        processed_data_nes_postprocessed.append(dic)
+                    else:
+                        processed_data_nes_postprocessed.append(ne)
+                f.write("\n".join([json.dumps(ne, ensure_ascii=False) for ne in processed_data_nes_postprocessed]))
                 f.write("\n")

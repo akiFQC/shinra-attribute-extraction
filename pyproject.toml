@@ -13,6 +13,9 @@ mlflow = "^1.19.0"
 seqeval = "^1.2.2"
 fugashi = "^1.1.1"
 ipadic = "^1.0.0"
+mecab-python3 = "^1.0.4"
+mojimoji = "^0.0.11"
+unidic-lite = "^1.0.8"
 
 [tool.poetry.dev-dependencies]
 

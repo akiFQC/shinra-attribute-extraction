@@ -158,13 +158,13 @@ class ShinraData(object):
                         # end_offset = len(tokens) if token_idx >= len(word2subword) else word2subword[token_idx-1]
                         ne["token_offset"]["end"] = {
                             "line_id": line_id,
-                            "offset": end_offset
+                            "offset": int(end_offset)
                         }
                         ne["token_offset"]["text"] = " ".join(tokens[ne["token_offset"]["start"]["offset"]:ne["token_offset"]["end"]["offset"]])
 
                         ne["text_offset"]["end"] = {
                             "line_id": line_id,
-                            "offset": text_offsets[end_offset-1][1]
+                            "offset": int(text_offsets[end_offset-1][1])
                         }
                         ne["page_id"] = self.page_id
                         ne["title"] = self.page_title
@@ -177,13 +177,13 @@ class ShinraData(object):
                         ne["token_offset"] = {
                             "start": {
                                 "line_id": line_id,
-                                "offset": word2subword[token_idx-1]
+                                "offset": int(word2subword[token_idx-1])
                             }
                         }
                         ne["text_offset"] = {
                             "start": {
                                 "line_id": line_id,
-                                "offset": text_offsets[word2subword[token_idx-1]][0]
+                                "offset": int(text_offsets[word2subword[token_idx-1]][0])
                             }
                         }
 
