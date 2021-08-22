@@ -2,6 +2,7 @@ import argparse
 import sys
 from pathlib import Path
 import json
+import os
 
 import torch
 from torch.utils.data import DataLoader
@@ -18,6 +19,10 @@ from dataset import NerDataset, ner_collate_fn, decode_iob
 from model import BertForMultilabelNER, create_pooler_matrix
 from predict import predict
 
+# https://github.com/davda54/sam
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'sam')))
+print("sys.path", sys.path  )
+from sam import SAM
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
@@ -49,12 +54,14 @@ def parse_arg():
 
     parser.add_argument("--input_path", type=str, help="Specify input path in SHINRA2020")
     parser.add_argument("--model_path", type=str, help="Specify attribute_list path in SHINRA2020")
+    parser.add_argument("--origin_model_path", default= "", type=str, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--lr", type=float, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--bsz", type=int, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--epoch", type=int, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--grad_acc", type=int, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--grad_clip", type=float, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--note", type=str, help="Specify attribute_list path in SHINRA2020")
+    parser.add_argument("--optimizer", choices=['AdamW', 'SAM'], type=str)
 
     args = parser.parse_args()
 
@@ -70,7 +77,13 @@ def evaluate(model, dataset, attributes, args):
 
 
 def train(model, train_dataset, valid_dataset, attributes, args):
-    optimizer = optim.AdamW(model.parameters(), lr=args.lr)
+    if args.optimizer=="SAM":# SAMを使う
+        print("use SAM")
+        base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
+        optimizer = SAM(model.parameters(), base_optimizer, lr=0.1, momentum=0.9)
+    else:
+        print("use AdamW")
+        optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     # scheduler = get_scheduler(
     #     args.bsz, args.grad_acc, args.epoch, args.warmup, optimizer, len(train_dataset))
 
@@ -94,30 +107,66 @@ def train(model, train_dataset, valid_dataset, attributes, args):
             input_ids = pad_sequence([torch.tensor(t) for t in input_ids], padding_value=0, batch_first=True).to(device)
             attention_mask = input_ids > 0
             pooling_matrix = create_pooler_matrix(input_ids, word_idxs, pool_type="head").to(device)
+            if args.optimizer=="SAM":
+                outputs = model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=labels,
+                    pooling_matrix=pooling_matrix)
 
-            outputs = model(
-                input_ids=input_ids,
-                attention_mask=attention_mask,
-                labels=labels,
-                pooling_matrix=pooling_matrix)
+                loss = outputs[0]
+                loss.backward()
 
-            loss = outputs[0]
-            loss.backward()
+                total_loss += loss.item()
+                mlflow.log_metric("Trian batch loss", loss.item(), step=(e+1) * step)
 
-            total_loss += loss.item()
-            mlflow.log_metric("Trian batch loss", loss.item(), step=(e+1) * step)
+                bar.set_description(f"[Epoch] {e + 1}")
+                bar.set_postfix({"loss": loss.item()})
+                bar.update(args.bsz)
 
-            bar.set_description(f"[Epoch] {e + 1}")
-            bar.set_postfix({"loss": loss.item()})
-            bar.update(args.bsz)
+                if (step + 1) % args.grad_acc == 0:
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), args.grad_clip
+                    )
+                    optimizer.first_step(zero_grad=True) # SAM
+                    if (step + 1) == 1:
+                        print('doing SAM, first step')
+                    outputs = model(
+                        input_ids=input_ids,
+                        attention_mask=attention_mask,
+                        labels=labels,
+                        pooling_matrix=pooling_matrix)
 
-            if (step + 1) % args.grad_acc == 0:
-                torch.nn.utils.clip_grad_norm_(
-                    model.parameters(), args.grad_clip
-                )
-                optimizer.step()
-                # scheduler.step()
-                optimizer.zero_grad()
+                    loss = outputs[0]
+                    loss.backward()
+                    if (step + 1) == 1:
+                        print('doing SAM, second step')
+                    optimizer.second_step(zero_grad=True)
+
+            else:
+                outputs = model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=labels,
+                    pooling_matrix=pooling_matrix)
+
+                loss = outputs[0]
+                loss.backward()
+
+                total_loss += loss.item()
+                mlflow.log_metric("Trian batch loss", loss.item(), step=(e+1) * step)
+
+                bar.set_description(f"[Epoch] {e + 1}")
+                bar.set_postfix({"loss": loss.item()})
+                bar.update(args.bsz)
+
+                if (step + 1) % args.grad_acc == 0:
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), args.grad_clip
+                    )
+                    optimizer.step()
+                    # scheduler.step()
+                    optimizer.zero_grad()
 
         losses.append(total_loss / (step+1))
         mlflow.log_metric("Trian loss", losses[-1], step=e)
@@ -152,6 +201,9 @@ if __name__ == "__main__":
     # dataset = [d.ner_inputs for d in dataset if d.nes is not None]
 
     model = BertForMultilabelNER(bert, len(attributes)).to(device)
+    if args.origin_model_path !="" :
+        if os.exists(args.origin_model_path):
+            model.load_state_dict(torch.load(args.origin_model_path))
     train_dataset, valid_dataset = train_test_split(dataset, test_size=0.1)
     train_dataset = NerDataset([d for train_d in train_dataset for d in train_d], tokenizer)
     valid_dataset = NerDataset([d for valid_d in valid_dataset for d in valid_d], tokenizer)
