@@ -1,8 +1,8 @@
 python predict.py \
     --input_path /home/afukuchi/Codes/shinra-attribute-extraction/for_leaderbord_JP-5/inputs/tohoku_bert/JP-5/City \
-    --model_path /home/afukuchi/Codes/shinra-attribute-extraction/models/City/best.model \
+    --model_path /home/afukuchi/Codes/shinra-attribute-extraction/models/20210820/City/best.model \
     --output_path /home/afukuchi/Codes/shinra-attribute-extraction/for_leaderbord_JP-5/outputs/tohoku_bert/JP-5/Submission/City.json \
-    --plane_path /home/afukuchi/Codes/shinra-attribute-extraction/test_for_leaderboard/target_data/plain/City ;  \
+    --plain_path /home/afukuchi/Codes/shinra-attribute-extraction/test_for_leaderboard/target_data/plain/City ;  \
 
 echo "city end";
 # 空行を除いて上書き保存
@@ -11,9 +11,9 @@ sed -i '/^$/d' /home/afukuchi/Codes/shinra-attribute-extraction/for_leaderbord_J
 
 python predict.py \
     --input_path /home/afukuchi/Codes/shinra-attribute-extraction/for_leaderbord_JP-5/inputs/tohoku_bert/JP-5/Company \
-    --model_path /home/afukuchi/Codes/shinra-attribute-extraction/models/Company/best.model \
+    --model_path /home/afukuchi/Codes/shinra-attribute-extraction/models/20210820/Company/best.model \
     --output_path /home/afukuchi/Codes/shinra-attribute-extraction/for_leaderbord_JP-5/outputs/tohoku_bert/JP-5/Submission/Company.json \
-    --plane_path /home/afukuchi/Codes/shinra-attribute-extraction/test_for_leaderboard/target_data/plain/Company ;\
+    --plain_path /home/afukuchi/Codes/shinra-attribute-extraction/test_for_leaderboard/target_data/plain/Company ;\
 echo "空行削除"
 # 空行を除いて上書き保存
 sed -i '/^$/d' /home/afukuchi/Codes/shinra-attribute-extraction/for_leaderbord_JP-5/outputs/tohoku_bert/JP-5/Submission/Company.json

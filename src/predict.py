@@ -17,7 +17,7 @@ from model import BertForMultilabelNER, create_pooler_matrix
 
 import os
 
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
+device =  "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
 def ner_for_shinradata(model, tokenizer, shinra_dataset, device):
@@ -32,7 +32,7 @@ def ner_for_shinradata(model, tokenizer, shinra_dataset, device):
 
 def predict(model, dataset, device, sent_wise=False):
     model.eval()
-    dataloader = DataLoader(dataset, batch_size=128, collate_fn=ner_collate_fn)
+    dataloader = DataLoader(dataset, batch_size=64, collate_fn=ner_collate_fn)
 
     total_preds = []
     total_trues = []
@@ -84,7 +84,8 @@ def parse_arg():
     parser.add_argument("--input_path", type=str, help="Specify input path in SHINRA2020")
     parser.add_argument("--model_path", type=str, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--output_path", type=str, help="Specify attribute_list path in SHINRA2020")
-    parser.add_argument('--plane_path', type=str, default = "", help='Specify path of plane text in SHINRA2020 (plane text)')
+    parser.add_argument('--plain_path', type=str, default = "", help='Specify path of plain text in SHINRA2020 (plain text)')
+    parser.add_argument('--device', type=str, default = "cuda:0", help='Specify path of plain text in SHINRA2020 (plain text)')
 
     args = parser.parse_args()
 
@@ -102,7 +103,7 @@ if __name__ == "__main__":
     assert (input_path / "attributes.txt").exists()
     with open(input_path / "attributes.txt", "r") as f:
         attributes = [attr for attr in f.read().split("\n") if attr != '']
-
+    device=args.device 
     model = BertForMultilabelNER(bert, len(attributes))
     model.load_state_dict(torch.load(args.model_path))
     model.to(device)
@@ -126,13 +127,13 @@ if __name__ == "__main__":
                         #print('ne', type(ne), ne, ne.keys())
                         dic = copy.deepcopy(ne)
                         id_text = ne["page_id"] 
-                        if args.plane_path =="":
+                        if args.plain_path =="":
                             dic['text_offset']['text'] = "".join([ t.lstrip('#')  for t in  ne['token_offset']['text'].split(' ') ])
                         else:
                             offset_type = 'text_offset'
-                            plane_text = get_wiki(args.plane_path, id_text)
-                            #print('got text: ', plane_text[:20].replace("\n", ''))
-                            splitext = plane_text.split("\n")
+                            plain_text = get_wiki(args.plain_path, id_text)
+                            #print('got text: ', plain_text[:20].replace("\n", ''))
+                            splitext = plain_text.split("\n")
                             accum = ""
                             for idx,line_id in enumerate(range(ne[offset_type]["start"]["line_id"],ne[offset_type]["end"]["line_id"]+1)):
                                 sol,eol = 0,len(splitext[line_id])
@@ -148,5 +149,5 @@ if __name__ == "__main__":
                         processed_data_nes_postprocessed.append(dic)
                     else:
                         processed_data_nes_postprocessed.append(ne)
-                f.write("\n".join([json.dumps(ne, ensure_ascii=False) for ne in processed_data_nes_postprocessed]))
+                f.write("\n".join([json.dumps(ne, ensure_ascii=True) for ne in processed_data_nes_postprocessed]))
                 f.write("\n")
