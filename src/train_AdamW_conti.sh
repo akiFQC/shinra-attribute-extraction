@@ -1,0 +1,22 @@
+python train.py \
+    --input_path /home/afukuchi/Codes/shinra-attribute-extraction/2020jp_tokenize_mecab_ipadic_bpe_tohoku_bert/JP-5/data1/ujiie/shinra/tohoku_bert/JP-5/City/ \
+    --model_path /home/afukuchi/Codes/shinra-attribute-extraction/models/20210824_conti/City \
+    --origin_model_path /home/afukuchi/Codes/shinra-attribute-extraction/models/20210824_conti/City/last.model \
+    --lr 1e-5 \
+    --bsz 8 \
+    --epoch 5 \
+    --grad_acc 1 \
+    --grad_clip 1.0 \
+    --optimizer AdamW ;
+echo "end city";
+python train.py \
+    --input_path /home/afukuchi/Codes/shinra-attribute-extraction/2020jp_tokenize_mecab_ipadic_bpe_tohoku_bert/JP-5/data1/ujiie/shinra/tohoku_bert/JP-5/Company/ \
+    --model_path /home/afukuchi/Codes/shinra-attribute-extraction/models/20210824_conti/Company \
+    --origin_model_path /home/afukuchi/Codes/shinra-attribute-extraction/models/20210824_conti/Company/last.model \
+    --lr 1e-5 \
+    --bsz 8 \
+    --epoch 5 \
+    --grad_acc 1 \
+    --grad_clip 1.0 \
+    --optimizer AdamW;
+echo "end company"

@@ -176,6 +176,7 @@ def train(model, train_dataset, valid_dataset, attributes, args):
 
         if early_stopping._score < valid_f1:
             torch.save(model.to('cpu').state_dict(), args.model_path + "best.model")
+            model.to(device)
 
 
         if e + 1 > 30 and early_stopping.validate(valid_f1):
@@ -202,7 +203,7 @@ if __name__ == "__main__":
 
     model = BertForMultilabelNER(bert, len(attributes)).to(device)
     if args.origin_model_path !="" :
-        if os.exists(args.origin_model_path):
+        if os.path.exists(args.origin_model_path):
             model.load_state_dict(torch.load(args.origin_model_path))
     train_dataset, valid_dataset = train_test_split(dataset, test_size=0.1)
     train_dataset = NerDataset([d for train_d in train_dataset for d in train_d], tokenizer)
