@@ -118,11 +118,14 @@ if __name__ == "__main__":
     with open(args.output_path, "w") as f:
         for ii, data in enumerate(dataset):
             #print('gen dataset ', ii, ', data.nes=', data.nes, ',', data.nes is None)
+            #print(ii, vars(data))
             if data.nes is None:
                 processed_data = ner_for_shinradata(model, tokenizer, data, device)
+                #print('processed_data', processed_data)
                 #print([json.dumps(ne, ensure_ascii=False) for ne in processed_data.nes])
                 processed_data_nes_postprocessed = []
                 for ne in processed_data.nes:
+                    #print('ne', ne)
                     if 'text_offset' in ne:
                         #print('ne', type(ne), ne, ne.keys())
                         dic = copy.deepcopy(ne)
