@@ -175,7 +175,7 @@ def train(model, train_dataset, valid_dataset, attributes, args):
         mlflow.log_metric("Valid F1", valid_f1, step=e)
 
         if early_stopping._score < valid_f1:
-            torch.save(model.to('cpu').state_dict(), args.model_path + "best.model")
+            torch.save(model.to('cpu').state_dict(), os.path.join(args.model_path + "best.model"))
             model.to(device)
 
 
@@ -212,5 +212,5 @@ if __name__ == "__main__":
     mlflow.start_run()
     mlflow.log_params(vars(args))
     train(model, train_dataset, valid_dataset, attributes, args)
-    torch.save(model.to('cpu').state_dict(), args.model_path + "last.model")
+    torch.save(model.to('cpu').state_dict(), os.path.join(args.model_path,  "last.model"))
     mlflow.end_run()
