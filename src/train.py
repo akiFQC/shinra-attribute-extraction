@@ -71,6 +71,8 @@ def parse_arg():
 
 def evaluate(model, dataset, attributes, args):
     global device
+    if isinstance(model, torch.nn.DataParallel):
+        model = model.module
     total_preds, total_trues = predict(model, dataset, device)
     total_preds = decode_iob(total_preds, attributes)
     total_trues = decode_iob(total_trues, attributes)
@@ -119,13 +121,13 @@ def train(model, train_dataset, valid_dataset, attributes, args):
                     pooling_matrix=pooling_matrix)
 
                 loss = outputs[0]
-                loss.backward()
+                loss.mean().backward()
 
-                total_loss += loss.item()
-                mlflow.log_metric("Trian batch loss", loss.item(), step=(e+1) * step)
+                total_loss += loss.mean().item()
+                mlflow.log_metric("Trian batch loss", loss.mean().item(), step=(e+1) * step)
 
                 bar.set_description(f"[Epoch] {e + 1}")
-                bar.set_postfix({"loss": loss.item()})
+                bar.set_postfix({"loss": loss.mean().item()})
                 bar.update(args.bsz)
 
                 if (step + 1) % args.grad_acc == 0:
@@ -142,7 +144,7 @@ def train(model, train_dataset, valid_dataset, attributes, args):
                         pooling_matrix=pooling_matrix)
 
                     loss = outputs[0]
-                    loss.backward()
+                    loss.mean().backward()
                     if (step + 1) == 1:
                         print('doing SAM, second step')
                     optimizer.second_step(zero_grad=True)
@@ -155,13 +157,15 @@ def train(model, train_dataset, valid_dataset, attributes, args):
                     pooling_matrix=pooling_matrix)
 
                 loss = outputs[0]
-                loss.backward()
+                #print('158 outputs', outputs)
+                #print('159 loss', loss.shape)
+                loss.mean().backward()
 
-                total_loss += loss.item()
-                mlflow.log_metric("Trian batch loss", loss.item(), step=(e+1) * step)
+                total_loss += loss.mean().item()
+                mlflow.log_metric("Trian batch loss", loss.mean().item(), step=(e+1) * step)
 
                 bar.set_description(f"[Epoch] {e + 1}")
-                bar.set_postfix({"loss": loss.item()})
+                bar.set_postfix({"loss": loss.mean().item()})
                 bar.update(args.bsz)
 
                 if (step + 1) % args.grad_acc == 0:
@@ -175,11 +179,11 @@ def train(model, train_dataset, valid_dataset, attributes, args):
         losses.append(total_loss / (step+1))
         mlflow.log_metric("Trian loss", losses[-1], step=e)
 
-        valid_f1 = evaluate(model, valid_dataset, attributes, args)
+        valid_f1 = evaluate(model.module, valid_dataset, attributes, args)
         mlflow.log_metric("Valid F1", valid_f1, step=e)
 
         if early_stopping._score < valid_f1:
-            torch.save(model.module.to('cpu').state_dict(), args.model_path + "best.model")
+            torch.save(model.module.state_dict(), os.path.join(args.model_path,  "best.model"))
             model.to(device)
 
 
@@ -189,10 +193,10 @@ def train(model, train_dataset, valid_dataset, attributes, args):
 
 if __name__ == "__main__":
     args = parse_arg()
-    device = args.device
     if "cuda:" in args.device:
         device_str = args.device.lstrip("cuda:")
         device_ids = list(map(int, device_str.split('-')))
+        device = f'cuda:{device_ids[0]}'
     else:
         device_ids = None
         Error("use cuda. --device cuda-[09]")
@@ -223,6 +227,7 @@ if __name__ == "__main__":
     if args.origin_model_path !="" :
         if os.path.exists(args.origin_model_path):
             model.load_state_dict(torch.load(args.origin_model_path))
+    model.to(device)
     train_dataset, valid_dataset = train_test_split(dataset, test_size=0.1)
     train_dataset = NerDataset([d for train_d in train_dataset for d in train_d], tokenizer)
     valid_dataset = NerDataset([d for valid_d in valid_dataset for d in valid_d], tokenizer)
@@ -230,5 +235,5 @@ if __name__ == "__main__":
     mlflow.start_run()
     mlflow.log_params(vars(args))
     train(model, train_dataset, valid_dataset, attributes, args)
-    torch.save(model.module.to('cpu').state_dict(), args.model_path + "last.model")
+    torch.save(model.module.state_dict(), os.path.join(args.model_path, "last.model"))
     mlflow.end_run()
