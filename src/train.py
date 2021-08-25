@@ -1,4 +1,5 @@
 import argparse
+from copy import Error
 import sys
 from pathlib import Path
 import json
@@ -62,12 +63,14 @@ def parse_arg():
     parser.add_argument("--grad_clip", type=float, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--note", type=str, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--optimizer", choices=['AdamW', 'SAM'], type=str)
+    parser.add_argument("--device", default='cuda:0', type=str, help="cuda:0みたいな感じで、数字を-で区切ると並列化できる。")
 
     args = parser.parse_args()
 
     return args
 
 def evaluate(model, dataset, attributes, args):
+    global device
     total_preds, total_trues = predict(model, dataset, device)
     total_preds = decode_iob(total_preds, attributes)
     total_trues = decode_iob(total_trues, attributes)
@@ -77,6 +80,7 @@ def evaluate(model, dataset, attributes, args):
 
 
 def train(model, train_dataset, valid_dataset, attributes, args):
+    global device
     if args.optimizer=="SAM":# SAMを使う
         print("use SAM")
         base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
@@ -175,7 +179,7 @@ def train(model, train_dataset, valid_dataset, attributes, args):
         mlflow.log_metric("Valid F1", valid_f1, step=e)
 
         if early_stopping._score < valid_f1:
-            torch.save(model.to('cpu').state_dict(), args.model_path + "best.model")
+            torch.save(model.module.to('cpu').state_dict(), args.model_path + "best.model")
             model.to(device)
 
 
@@ -185,6 +189,15 @@ def train(model, train_dataset, valid_dataset, attributes, args):
 
 if __name__ == "__main__":
     args = parse_arg()
+    device = args.device
+    if "cuda:" in args.device:
+        device_str = args.device.lstrip("cuda:")
+        device_ids = list(map(int, device_str.split('-')))
+    else:
+        device_ids = None
+        Error("use cuda. --device cuda-[09]")
+
+
 
     bert = AutoModel.from_pretrained("cl-tohoku/bert-base-japanese")
     tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
@@ -202,6 +215,11 @@ if __name__ == "__main__":
     # dataset = [d.ner_inputs for d in dataset if d.nes is not None]
 
     model = BertForMultilabelNER(bert, len(attributes)).to(device)
+
+    # multi-gpu
+    if not device_ids is None:
+        model = torch.nn.DataParallel(model, device_ids=device_ids)
+
     if args.origin_model_path !="" :
         if os.path.exists(args.origin_model_path):
             model.load_state_dict(torch.load(args.origin_model_path))
@@ -212,5 +230,5 @@ if __name__ == "__main__":
     mlflow.start_run()
     mlflow.log_params(vars(args))
     train(model, train_dataset, valid_dataset, attributes, args)
-    torch.save(model.to('cpu').state_dict(), args.model_path + "last.model")
+    torch.save(model.module.to('cpu').state_dict(), args.model_path + "last.model")
     mlflow.end_run()

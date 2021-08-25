@@ -1,8 +1,8 @@
 import torch
 from transformers import get_linear_schedule_with_warmup
 
-import apex
-from apex import amp
+#import apex
+#from apex import amp
 
 
 def calculate_recall(trues, candidates, ks=[1, 5, 10, 30, 50, 100]):
@@ -37,7 +37,7 @@ def to_parallel(model):
     model = torch.nn.DataParallel(model)
     return model
 
-
+"""
 def to_fp16(model, optimizer=None, fp16_opt_level=None):
     if optimizer is None:
         model = apex.amp.initialize(model, opt_level=fp16_opt_level)
@@ -45,7 +45,7 @@ def to_fp16(model, optimizer=None, fp16_opt_level=None):
     else:
         model, optimizer = apex.amp.initialize(model, optimizer, opt_level=fp16_opt_level)
         return model, optimizer
-
+"""
 
 def get_scheduler(batch_size, grad_acc, epochs, warmup_propotion, optimizer, len_train_data):
     num_train_steps = int(epochs * len_train_data / batch_size / grad_acc)
