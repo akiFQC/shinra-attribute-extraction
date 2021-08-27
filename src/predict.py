@@ -105,7 +105,7 @@ if __name__ == "__main__":
         attributes = [attr for attr in f.read().split("\n") if attr != '']
     device=args.device 
     model = BertForMultilabelNER(bert, len(attributes))
-    model.load_state_dict(torch.load(args.model_path))
+    model.load_state_dict(torch.load(args.model_path, map_location='cpu'))
     model.to(device)
 
     # dataset = [ShinraData(), ....]
