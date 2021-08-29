@@ -86,7 +86,7 @@ def parse_arg():
     parser.add_argument("--model_path", type=str, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument("--output_path", type=str, help="Specify attribute_list path in SHINRA2020")
     parser.add_argument('--plain_path', type=str, default = "", help='Specify path of plain text in SHINRA2020 (plain text)')
-    parser.add_argument('--device', type=str, default = "cuda:0", help='Specify path of plain text in SHINRA2020 (plain text)')
+    parser.add_argument('--device', type=str, default = "cpu", help='Specify path of plain text in SHINRA2020 (plain text)')
 
     args = parser.parse_args()
 
@@ -105,9 +105,12 @@ if __name__ == "__main__":
     with open(input_path / "attributes.txt", "r") as f:
         attributes = [attr for attr in f.read().split("\n") if attr != '']
     device=args.device 
+    device = 'cpu'
     model = BertForMultilabelNER(bert, len(attributes))
     model.load_state_dict(torch.load(args.model_path, map_location='cpu'))
-    model.to(device)
+    model.to('cpu')
+
+    model = torch.quantization.quantize_dynamic(model)
 
     # dataset = [ShinraData(), ....]
     dataset = ShinraData.from_shinra2020_format(Path(args.input_path))

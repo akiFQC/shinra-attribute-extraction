@@ -19,6 +19,7 @@ import os
 
 device =  "cuda:0" if torch.cuda.is_available() else "cpu"
 
+torch.backends.cudnn.benchmark = True
 
 def ner_for_shinradata(model, tokenizer, shinra_dataset, device):
     processed_data = shinra_dataset.ner_inputs
@@ -48,12 +49,13 @@ def predict(model, dataset, device, sent_wise=False):
             attention_mask = input_ids > 0
             pooling_matrix = create_pooler_matrix(input_ids, word_idxs, pool_type="head").to(device)
 
-            preds = model.predict(
-                input_ids=input_ids,
-                attention_mask=attention_mask,
-                word_idxs=word_idxs,
-                pooling_matrix=pooling_matrix
-            )
+            with torch.cuda.amp.autocast():
+                preds = model.predict(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    word_idxs=word_idxs,
+                    pooling_matrix=pooling_matrix
+                )
 
             total_preds.append(preds)
             # test dataの場合truesは使わないので適当にpredsを入れる
